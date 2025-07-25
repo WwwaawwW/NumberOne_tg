@@ -1,4 +1,3 @@
-
 import logging
 import asyncio
 import os
@@ -68,11 +67,12 @@ async def send_welcome(message: types.Message):
     user_gpt4_usage[user_id] = 0
     user_last_reset[user_id] = datetime.now()
     await message.answer(
-        "👋 Добро пожаловать в NUMBER ONE — мир нейросетей!
+    await message.answer(
+        """👋 Добро пожаловать в NUMBER ONE — мир нейросетей!
 
-"
-        "📌 GPT-3.5 — бесплатно
-"
+📌 GPT-3.5 — бесплатно
+🚀 GPT-4, DALL·E и прочее — пока отключены или под подписку."""
+    )
         "🚀 GPT-4, DALL·E и прочее — пока отключены или под подписку.",
         reply_markup=main_menu
     )
