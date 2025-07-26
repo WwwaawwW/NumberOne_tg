@@ -55,11 +55,12 @@ async def show_models(message: types.Message):
         text += f"{desc}\n"
     await message.answer(text, parse_mode="HTML")
 
-@dp.message()
+@dp.message(F.text)
 async def handle_message(message: Message):
-    user_id = message.from_user.id
-    model = user_model.get(user_id, "gpt-3.5-turbo")
     prompt = message.text
+    model = "gpt-3.5-turbo"
+
+    await message.answer("⚙️ Генерирую ответ от GPT-3.5...")
 
     try:
         response = openai.ChatCompletion.create(
@@ -71,12 +72,10 @@ async def handle_message(message: Message):
         await message.answer(reply)
 
     except openai.error.OpenAIError as e:
-        # Показываем конкретную ошибку от OpenAI
-        await message.answer(f"❌ Ошибка OpenAI:\n<code>{str(e)}</code>", parse_mode="HTML")
+        await message.answer(f"❌ OpenAI API ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
         print(f"OpenAI API Error: {e}")
 
     except Exception as e:
-        # Показываем прочие ошибки
         await message.answer(f"⚠️ Непредвиденная ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
         print(f"Unexpected Error: {e}")
 
