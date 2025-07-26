@@ -7,31 +7,29 @@ from aiogram.types import Message
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 import os
-from openai import OpenAI
+import openai
 
-# Загружаем переменные из .env
+# Загрузка токенов из .env
 load_dotenv()
-
-TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not TOKEN:
-    raise ValueError("❌ Переменная BOT_TOKEN не найдена!")
-
+if not BOT_TOKEN:
+    raise ValueError("❌ BOT_TOKEN не найден в .env или Railway Variables.")
 if not OPENAI_API_KEY:
-    raise ValueError("❌ Переменная OPENAI_API_KEY не найдена!")
+    raise ValueError("❌ OPENAI_API_KEY не найден в .env или Railway Variables.")
 
-# Настройка клиентов
-bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
+openai.api_key = OPENAI_API_KEY
+
+# Настройка Telegram-бота
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher(storage=MemoryStorage())
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Словари пользователей
+# Хранилище пользователей
 user_model = {}
 user_gpt4_usage = {}
 user_last_reset = {}
 
-# Описание моделей
 model_descriptions = {
     "gpt-3.5-turbo": "🤖 GPT-3.5 Turbo — быстрый и бесплатный.",
     "gpt-4": "🚀 GPT-4 — скоро будет доступен по подписке.",
@@ -43,6 +41,7 @@ async def cmd_start(message: types.Message):
     user_model[user_id] = "gpt-3.5-turbo"
     user_gpt4_usage[user_id] = 0
     user_last_reset[user_id] = datetime.now()
+
     await message.answer(
         """👋 Добро пожаловать в NUMBER ONE — мир нейросетей!
 
@@ -55,17 +54,16 @@ async def show_models(message: types.Message):
     text = "🧠 <b>Доступные нейросети:</b>\n\n"
     for desc in model_descriptions.values():
         text += f"{desc}\n"
-    await message.answer(text, parse_mode="HTML")
+    await message.answer(text)
 
 @dp.message(F.text)
 async def handle_message(message: Message):
     prompt = message.text
-    model = "gpt-3.5-turbo"
     await message.answer("⚙️ Генерирую ответ от GPT-3.5...")
 
     try:
-        response = openai_client.chat.completions.create(
-            model=model,
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -73,7 +71,7 @@ async def handle_message(message: Message):
         await message.answer(reply)
 
     except Exception as e:
-        await message.answer(f"❌ Ошибка OpenAI:\n<code>{str(e)}</code>", parse_mode="HTML")
+        await message.answer(f"❌ OpenAI ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
         print("OpenAI Error:", e)
 
 async def main():
