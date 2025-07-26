@@ -4,36 +4,38 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
 from aiogram.types import Message
-from aiogram import F
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 import os
-import openai
+from openai import OpenAI
 
+# Загружаем переменные из .env
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not TOKEN:
-    raise ValueError("❌ BOT_TOKEN не найден. Добавь его в Railway Variables или .env")
+    raise ValueError("❌ Переменная BOT_TOKEN не найдена!")
 
 if not OPENAI_API_KEY:
-    raise ValueError("❌ OPENAI_API_KEY не найден. Добавь его в Railway Variables или .env")
+    raise ValueError("❌ Переменная OPENAI_API_KEY не найдена!")
 
-openai.api_key = OPENAI_API_KEY
-
+# Настройка клиентов
 bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher(storage=MemoryStorage())
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
+# Словари пользователей
+user_model = {}
+user_gpt4_usage = {}
+user_last_reset = {}
+
+# Описание моделей
 model_descriptions = {
     "gpt-3.5-turbo": "🤖 GPT-3.5 Turbo — быстрый и бесплатный.",
     "gpt-4": "🚀 GPT-4 — скоро будет доступен по подписке.",
 }
-
-user_model = {}
-user_gpt4_usage = {}
-user_last_reset = {}
 
 @dp.message(F.text == "/start")
 async def cmd_start(message: types.Message):
@@ -59,26 +61,20 @@ async def show_models(message: types.Message):
 async def handle_message(message: Message):
     prompt = message.text
     model = "gpt-3.5-turbo"
-
     await message.answer("⚙️ Генерирую ответ от GPT-3.5...")
 
     try:
-        response = openai.ChatCompletion.create(
+        response = openai_client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        reply = response["choices"][0]["message"]["content"]
+        reply = response.choices[0].message.content
         await message.answer(reply)
 
-    except openai.error.OpenAIError as e:
-        await message.answer(f"❌ OpenAI API ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
-        print(f"OpenAI API Error: {e}")
-
     except Exception as e:
-        await message.answer(f"⚠️ Непредвиденная ошибка:\n<code>{str(e)}</code>", parse_mode="HTML")
-        print(f"Unexpected Error: {e}")
-
+        await message.answer(f"❌ Ошибка OpenAI:\n<code>{str(e)}</code>", parse_mode="HTML")
+        print("OpenAI Error:", e)
 
 async def main():
     logging.basicConfig(level=logging.INFO)
