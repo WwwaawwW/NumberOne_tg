@@ -4,6 +4,7 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
 from aiogram.types import Message
+from aiogram import F
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 import os
