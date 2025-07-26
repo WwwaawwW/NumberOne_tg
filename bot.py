@@ -67,9 +67,10 @@ async def handle_message(message: Message):
         )
         reply = response["choices"][0]["message"]["content"]
         await message.answer(reply)
-    except Exception as e:
-        await message.answer("❌ Ошибка при обращении к OpenAI API.")
-        print(f"OpenAI Error: {e}")
+except Exception as e:
+    await message.answer(f"❌ Ошибка при обращении к OpenAI API:\n<code>{str(e)}</code>", parse_mode="HTML")
+    print(f"OpenAI Error: {e}")
+
 
 async def main():
     logging.basicConfig(level=logging.INFO)
